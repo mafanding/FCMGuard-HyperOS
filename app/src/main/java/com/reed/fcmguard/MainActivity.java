@@ -518,6 +518,7 @@ public class MainActivity extends Activity {
     }
 
     private void startProtectionService() {
+        if (GuardService.RUNNING) return;   // already running; skip the redundant start (and its HyperOS report) on every onResume
         Intent service = new Intent(this, GuardService.class);
         try {
             boolean persistent = SettingsGuard.usePersistentNotification(this);

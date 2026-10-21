@@ -11,12 +11,24 @@ public class BootReceiver extends BroadcastReceiver {
 
         Intent service = new Intent(context, GuardService.class);
         try {
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            if (GuardService.RUNNING) {
+                // Service already up (e.g. USER_PRESENT on unlock): just deliver
+                // onStartCommand so it re-posts the notification, with no fresh
+                // foreground-service start (and no extra HyperOS report).
+                context.startService(service);
+            } else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
                     SettingsGuard.usePersistentNotification(context)) {
                 context.startForegroundService(service);
             } else {
                 context.startService(service);
             }
-        } catch (Throwable ignored) {}
+        } catch (Throwable ignored) {
+            try {
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+                        SettingsGuard.usePersistentNotification(context)) {
+                    context.startForegroundService(service);
+                }
+            } catch (Throwable ignored2) {}
+        }
     }
 }
